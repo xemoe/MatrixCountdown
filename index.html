@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Matrix-style Digital Countdown</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Orbitron', sans-serif;
+            background: transparent;
+        }
+        #matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        #countdown {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+            z-index: 1;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .digit-group {
+            display: inline-block;
+            margin: 0 10px;
+        }
+        .digit {
+            font-size: 4em;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .label {
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+        .separator {
+            font-size: 4em;
+            vertical-align: top;
+        }
+        #target-date {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-bg"></canvas>
+    <div id="countdown">
+        <div class="digit-group">
+            <span class="digit" id="days">00</span>
+            <div class="label">DAYS</div>
+        </div>
+        <span class="separator">:</span>
+        <div class="digit-group">
+            <span class="digit" id="hours">00</span>
+            <div class="label">HOURS</div>
+        </div>
+        <span class="separator">:</span>
+        <div class="digit-group">
+            <span class="digit" id="minutes">00</span>
+            <div class="label">MINUTES</div>
+        </div>
+        <span class="separator">:</span>
+        <div class="digit-group">
+            <span class="digit" id="seconds">00</span>
+            <div class="label">SECONDS</div>
+        </div>
+        <div id="target-date"></div>
+    </div>
+
+    <script>
+        // Matrix background effect
+        const canvas = document.getElementById('matrix-bg');
+        const ctx = canvas.getContext('2d');
+
+        let w, h, columns, drops;
+
+        function setupCanvas() {
+            canvas.width = w = window.innerWidth;
+            canvas.height = h = window.innerHeight;
+            columns = Math.floor(w / 20);
+            drops = [];
+            for (let i = 0; i < columns; i++) {
+                drops[i] = 1;
+            }
+        }
+
+        setupCanvas();
+
+        const matrix = "アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッンABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%";
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, w, h);
+
+            ctx.fillStyle = '#0F0';
+            ctx.font = '15px monospace';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = matrix[Math.floor(Math.random() * matrix.length)];
+                ctx.fillText(text, i * 20, drops[i] * 20);
+
+                if (drops[i] * 20 > h && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        function animate() {
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', setupCanvas);
+
+        // Countdown timer
+        function getParameterByName(name, url = window.location.href) {
+            name = name.replace(/[\[\]]/g, '\\$&');
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        const epochParam = getParameterByName('epoch');
+        const targetDate = epochParam ? new Date(parseInt(epochParam) * 1000) : new Date("2024-09-09T00:00:00");
+
+        document.getElementById("target-date").textContent = `UNTIL ${targetDate.toDateString()}`;
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const timeLeft = targetDate.getTime() - now;
+
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+            document.getElementById("days").textContent = days.toString().padStart(2, '0');
+            document.getElementById("hours").textContent = hours.toString().padStart(2, '0');
+            document.getElementById("minutes").textContent = minutes.toString().padStart(2, '0');
+            document.getElementById("seconds").textContent = seconds.toString().padStart(2, '0');
+
+            if (timeLeft < 0) {
+                clearInterval(countdownTimer);
+                document.getElementById("countdown").innerHTML = "THE DATE HAS PASSED!";
+            }
+        }
+
+        updateCountdown(); // Initial call
+        const countdownTimer = setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>
